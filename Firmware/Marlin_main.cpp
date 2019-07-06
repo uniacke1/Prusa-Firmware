@@ -1076,7 +1076,6 @@ void setup()
 	SERIAL_ECHO_START;
 	printf_P(PSTR(" " FW_VERSION_FULL "\n"));
 
-	//SERIAL_ECHOPAIR("Active sheet before:", static_cast<unsigned long int>(eeprom_read_byte(&(EEPROM_Sheets_base->active_sheet))));
 
 #ifdef DEBUG_SEC_LANG
 	lang_table_header_t header;
@@ -1292,8 +1291,8 @@ void setup()
 	tmc2130_mres[Z_AXIS] = tmc2130_usteps2mres(cs.axis_ustep_resolution[Z_AXIS]);
 	tmc2130_mres[E_AXIS] = tmc2130_usteps2mres(cs.axis_ustep_resolution[E_AXIS]);
 #else //TMC2130_VARIABLE_RESOLUTION
-	tmc2130_mres[X_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_XY);
-	tmc2130_mres[Y_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_XY);
+	tmc2130_mres[X_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_X); //Kuo
+	tmc2130_mres[Y_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_Y); //Kuo
 	tmc2130_mres[Z_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_Z);
 	tmc2130_mres[E_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_E);
 #endif //TMC2130_VARIABLE_RESOLUTION
@@ -1425,7 +1424,20 @@ void setup()
 		printf_P(PSTR("Card NG!\n"));
 #endif //DEBUG_SD_SPEED_TEST
 
-    eeprom_init();
+	if (eeprom_read_byte((uint8_t*)EEPROM_POWER_COUNT) == 0xff) eeprom_write_byte((uint8_t*)EEPROM_POWER_COUNT, 0);
+	if (eeprom_read_byte((uint8_t*)EEPROM_CRASH_COUNT_X) == 0xff) eeprom_write_byte((uint8_t*)EEPROM_CRASH_COUNT_X, 0);
+	if (eeprom_read_byte((uint8_t*)EEPROM_CRASH_COUNT_Y) == 0xff) eeprom_write_byte((uint8_t*)EEPROM_CRASH_COUNT_Y, 0);
+	if (eeprom_read_byte((uint8_t*)EEPROM_FERROR_COUNT) == 0xff) eeprom_write_byte((uint8_t*)EEPROM_FERROR_COUNT, 0);
+	if (eeprom_read_word((uint16_t*)EEPROM_POWER_COUNT_TOT) == 0xffff) eeprom_write_word((uint16_t*)EEPROM_POWER_COUNT_TOT, 0);
+	if (eeprom_read_word((uint16_t*)EEPROM_CRASH_COUNT_X_TOT) == 0xffff) eeprom_write_word((uint16_t*)EEPROM_CRASH_COUNT_X_TOT, 0);
+	if (eeprom_read_word((uint16_t*)EEPROM_CRASH_COUNT_Y_TOT) == 0xffff) eeprom_write_word((uint16_t*)EEPROM_CRASH_COUNT_Y_TOT, 0);
+	if (eeprom_read_word((uint16_t*)EEPROM_FERROR_COUNT_TOT) == 0xffff) eeprom_write_word((uint16_t*)EEPROM_FERROR_COUNT_TOT, 0);
+
+	if (eeprom_read_word((uint16_t*)EEPROM_MMU_FAIL_TOT) == 0xffff) eeprom_update_word((uint16_t *)EEPROM_MMU_FAIL_TOT, 0);
+	if (eeprom_read_word((uint16_t*)EEPROM_MMU_LOAD_FAIL_TOT) == 0xffff) eeprom_update_word((uint16_t *)EEPROM_MMU_LOAD_FAIL_TOT, 0);
+	if (eeprom_read_byte((uint8_t*)EEPROM_MMU_FAIL) == 0xff) eeprom_update_byte((uint8_t *)EEPROM_MMU_FAIL, 0);
+	if (eeprom_read_byte((uint8_t*)EEPROM_MMU_LOAD_FAIL) == 0xff) eeprom_update_byte((uint8_t *)EEPROM_MMU_LOAD_FAIL, 0);
+
 #ifdef SNMM
 	if (eeprom_read_dword((uint32_t*)EEPROM_BOWDEN_LENGTH) == 0x0ffffffff) { //bowden length used for SNMM
 	  int _z = BOWDEN_LENGTH;
@@ -1492,6 +1504,7 @@ void setup()
 		SilentModeMenu_MMU = 1;
 		eeprom_write_byte((uint8_t*)EEPROM_MMU_STEALTH, SilentModeMenu_MMU);
 	}
+	check_babystep(); //checking if Z babystep is in allowed range
 
 #if !defined(DEBUG_DISABLE_FANCHECK) && defined(FANCHECK) && defined(TACH_1) && TACH_1 >-1
 	setup_fan_interrupt();
@@ -1637,6 +1650,7 @@ void setup()
 #ifdef WATCHDOG
   wdt_enable(WDTO_4S);
 #endif //WATCHDOG
+
 }
 
 
@@ -2135,10 +2149,11 @@ bool calibrate_z_auto()
 	enable_endstops(endstops_enabled);
 	if (PRINTER_TYPE == PRINTER_MK3) {
 		current_position[Z_AXIS] = Z_MAX_POS + 2.0;
-	}
-	else {
-		current_position[Z_AXIS] = Z_MAX_POS + 9.0;
-	}
+ 	}
+ 	else {
+   		current_position[Z_AXIS] = Z_MAX_POS + 9.0;
+  	}
+
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 	return true;
 }
@@ -6962,6 +6977,155 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
     }
     break;
 
+case 919: //! M919 - Set TMC2130 toff Kuo
+     {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+     
+     tmc2130_chopper_config[a].toff = theValue;
+     printf_P(_N("tmc2130_toff[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].toff);  
+
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+ case 920: //! M920 - Set TMC2130 hstr Kuo
+ {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].hstr = theValue;
+     printf_P(_N("tmc2130_hstr[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].hstr);  
+ 
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+ case 921: //! M921 - Set TMC2130 hend Kuo
+    {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].hend = theValue;
+     printf_P(_N("tmc2130_hend[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].hend);  
+
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+    }
+    break;
+    
+ case 922: //! M922 - Set TMC2130 tbl Kuo
+    {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].tbl = theValue;
+     printf_P(_N("tmc2130_tbl[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].tbl);  
+    
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+
+  case 924: //! M924 - Set sg_thrs_home Kuo
+    {
+    if (code_seen('X')) tmc2130_sg_thr_home[X_AXIS] = code_value();
+    if (code_seen('Y')) tmc2130_sg_thr_home[Y_AXIS] = code_value();
+    if (code_seen('Z')) tmc2130_sg_thr_home[Z_AXIS] = code_value();
+    if (code_seen('E')) tmc2130_sg_thr_home[E_AXIS] = code_value();
+    for (uint8_t a = X_AXIS; a <= E_AXIS; a++)
+      printf_P(_N("tmc2130_sg_thr_home[%c]=%d\n"), "XYZE"[a], tmc2130_sg_thr_home[a]);
+    }
+    break;
+
+
+
 #endif //TMC2130_SERVICE_CODES_M910_M918
 
     case 350: //! M350 - Set microstepping mode. Warning: Steps per unit remains unchanged. S code sets stepping mode for all drivers.
@@ -8145,15 +8309,12 @@ static void wait_for_heater(long codenum, uint8_t extruder) {
 
 void check_babystep()
 {
-	int babystep_z = eeprom_read_word(reinterpret_cast<uint16_t *>(&(EEPROM_Sheets_base->
-            s[(eeprom_read_byte(&(EEPROM_Sheets_base->active_sheet)))].z_offset)));
-
+	int babystep_z;
+	EEPROM_read_B(EEPROM_BABYSTEP_Z, &babystep_z);
 	if ((babystep_z < Z_BABYSTEP_MIN) || (babystep_z > Z_BABYSTEP_MAX)) {
 		babystep_z = 0; //if babystep value is out of min max range, set it to 0
 		SERIAL_ECHOLNPGM("Z live adjust out of range. Setting to 0");
-		eeprom_write_word(reinterpret_cast<uint16_t *>(&(EEPROM_Sheets_base->
-            s[(eeprom_read_byte(&(EEPROM_Sheets_base->active_sheet)))].z_offset)),
-                    babystep_z);
+		EEPROM_save_B(EEPROM_BABYSTEP_Z, &babystep_z);
 		lcd_show_fullscreen_message_and_wait_P(PSTR("Z live adjust out of range. Setting to 0. Click to continue."));
 		lcd_update_enable(true);		
 	}	
@@ -9417,6 +9578,11 @@ void restore_print_from_ram_and_continue(float e_move)
 	fanSpeed = saved_fanSpeed;
 	float e = saved_pos[E_AXIS] - e_move;
 	plan_set_e_position(e);
+  
+  #ifdef FANCHECK
+    fans_check_enabled = false;
+  #endif
+
 	//first move print head in XY to the saved position:
 	plan_buffer_line(saved_pos[X_AXIS], saved_pos[Y_AXIS], current_position[Z_AXIS], saved_pos[E_AXIS] - e_move, homing_feedrate[Z_AXIS]/13, active_extruder);
 	st_synchronize();
@@ -9426,6 +9592,10 @@ void restore_print_from_ram_and_continue(float e_move)
 	//and finaly unretract (35mm/s)
 	plan_buffer_line(saved_pos[X_AXIS], saved_pos[Y_AXIS], saved_pos[Z_AXIS], saved_pos[E_AXIS], 35, active_extruder);
 	st_synchronize();
+
+  #ifdef FANCHECK
+    fans_check_enabled = true;
+  #endif
 
 	memcpy(current_position, saved_pos, sizeof(saved_pos));
 	memcpy(destination, current_position, sizeof(destination));
