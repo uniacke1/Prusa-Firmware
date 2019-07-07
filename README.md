@@ -266,8 +266,10 @@ BALITENSEN GT2 Timing Pulley 16 Teeth 5mm Bore, Width 10mm for GT2 Belt
 (optional) Replace X and Y motor pulleys with these to reduce 2mm, vertical GT2 tooth artifact. This particular drive pulley yielded lower tooth engagement 2mm artifact during 1st phase testing.
 
 ### E-Steps and microstepping
+Geared extruders now set for lower microstepping to avoid overruning EINSY during fast retracts or MMU2S filament moves. 
+Factory reset and delete all data after installing this firmware. Otherwise EEPROM settings override settings in this firmware.
 After installing this firmware, send M350 and M92 commands to force correct micro-stepping and e-step rates.
-
+```
 e-steps values for M92 depend on your extruder gearing.
 xxx = 280 for non-geared extruder
 xxx = 415 for BMG extruder (special Bondtech compensated value)
@@ -296,8 +298,7 @@ M350 E8
 M500
 
 Follow with power off/on and M503 to verify settings are correct.
-
-
+```
 END OF KUO MATERIAL
 ---
 
