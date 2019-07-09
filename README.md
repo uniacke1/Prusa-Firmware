@@ -22,7 +22,7 @@ Warning: You are definitely in experimental firmware territory here.
 #### Obtain Arduino IDE
 
 Visit https://www.arduino.cc/en/Main/Software and download the Arduino IDE for your OS. 
-I successfully use Arduino 1.8.8 for OSX. 
+I successfully use Arduino 1.8.9 for OSX. 
 Prusa instructions mention their internally using version 1.8.5
 Install Arduino compiler on your computer
 
@@ -188,7 +188,7 @@ Select either below listed Moons or OMC 0.9 degree steppers. Both dramatically r
 
 OMC motor is 1/2 cost of Moons but requires soldering of cable adapter. Moon's are plug-in compatible with Yotino cable harness.
 
-Moon's are best at reducing VFA's with linearity correction OFF. They do not tune better with linearity correction.
+Moon's are best at reducing VFA's with linearity correction OFF. They do not tune better with linearity correction. However, the Moon's have suffer a signficant rate of defective units shipped. After receiving a Moons' check it spins with very little notchinesss.
 
 OMC's are baseline slightly worse than Moons, but can be tuned to achieve better than Moons with linearity correction (1.130 - 1.140). However, forget to set linearity correction and the OMCs are worse than Moons. 
 
