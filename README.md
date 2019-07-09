@@ -299,6 +299,7 @@ M500
 
 Follow with power off/on and M503 to verify settings are correct.
 ```
+=======
 END OF KUO MATERIAL
 ---
 
