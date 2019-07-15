@@ -268,7 +268,7 @@ BALITENSEN GT2 Timing Pulley 16 Teeth 5mm Bore, Width 10mm for GT2 Belt
 ### E-Steps and microstepping
 Geared extruders now set for lower microstepping to avoid overruning EINSY during fast retracts or MMU2S filament moves. 
 Factory reset and delete all data after installing this firmware. Otherwise EEPROM settings override settings in this firmware.
-After installing this firmware, send M350 and M92 commands to force correct micro-stepping and e-step rates.
+After installing this firmware, send M350 and M92 commands to force correct micro-stepping and e-step rates. M350 should be done FIRST because M350 will sometimes modified prior M92 value.
 ```
 e-steps values for M92 depend on your extruder gearing.
 xxx = 280 for non-geared extruder
@@ -278,23 +278,23 @@ xxx = 473 for BNBSX with 54:16 gearing
 xxx = 490 for BNBSX, Short Ears, Skelestruder with 56:16 gearing
 
 non-geared extruder, 1.8 degree motor
-M92 E280
 M350 E32
+M92 E280
 M500
 
 non-geared extruder, 0.9 degree motor
-M92 E280
 M350 E16
+M92 E280
 M500
 
 geared extruder, 1.8 degree motor
-M92 Exxx
 M350 E16
+M92 Exxx
 M500
 
 geared extruder, 0.9 degree motor
-M92 Exxx
 M350 E8
+M92 Exxx
 M500
 
 Follow with power off/on and M503 to verify settings are correct.
