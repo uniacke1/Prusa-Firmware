@@ -80,6 +80,7 @@
 //Don't forget to also send gcode to set e-steps as detailed earlier
 //Reversion back from geared extruder requires sending M92 E280 & M500 to printer
 //
+//#define SKELESTRUDER // Uncomment if you have a skelestruder. Applies the patches for load distances and Z height.
 //#define BMG_EXTRUDER //Kuo Uncomment for BMG 3:1 extruder. This also sets BMG height for you.
 //#define EXTRUDER_GEARRATIO_30 //Kuo Uncomment for extruder with gear ratio 3.0. 
 //#define EXTRUDER_GEARRATIO_3375 //Kuo Uncomment for extruder with gear ratio 3.375 like 54:16 BNBSX.
@@ -90,6 +91,10 @@
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,3200/8,140}
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,3200/8,280}
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,3200/8,560}
+
+#ifdef SKELESTRUDER
+  #define EXTRUDER_GEARRATIO_35
+#endif
 
 #ifndef EXTRUDER_GEARED //Kuo for e-axis msteps
 #ifdef BMG_EXTRUDER 
@@ -155,6 +160,8 @@
 #define Y_MIN_POS -4 //orig -4
 #ifdef BMG_EXTRUDER
   #define Z_MAX_POS 205 //kuo BMG height
+#elifdef SKELESTRUDER
+  #define Z_MAX_POS 220 //Skelestruder height
 #else
   #define Z_MAX_POS 210 //default height
 #endif
