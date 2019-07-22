@@ -85,6 +85,11 @@
 //#define EXTRUDER_GEARRATIO_30 //Kuo Uncomment for extruder with gear ratio 3.0. 
 //#define EXTRUDER_GEARRATIO_3375 //Kuo Uncomment for extruder with gear ratio 3.375 like 54:16 BNBSX.
 //#define EXTRUDER_GEARRATIO_35 //Kuo Uncomment for extruder with gear ratio 3.5 like 56:16 Bunny and Bear Short Ears or Skelestruder.
+
+//====== Kuo Slice Support
+//#define SLICETHERMISTOR //uncomment for Slice Thermistor
+//#define SLICEMAGNUM //uncomment to increase MMU2S filament laod/unload distances for Slice Magnum
+
 //====== Kuo End of defines one normally needs to change ======
 
 // Steps per unit {X,Y,Z,E}
@@ -532,7 +537,11 @@
  *------------------------------------*/
 
 // Mintemps
-#define HEATER_0_MINTEMP 15
+#ifdef SLICETHERMISTOR //Kuo
+  #define HEATER_0_MINTEMP 5
+#else
+  #define HEATER_0_MINTEMP 15
+#endif
 #define HEATER_1_MINTEMP 5
 #define HEATER_2_MINTEMP 5
 #define HEATER_MINTEMP_DELAY 15000                // [ms] ! if changed, check maximal allowed value @ ShortTimer
@@ -548,8 +557,10 @@
 // Maxtemps
 #if defined(E3D_PT100_EXTRUDER_WITH_AMP) || defined(E3D_PT100_EXTRUDER_NO_AMP)
 #define HEATER_0_MAXTEMP 410
+#elif defined(SLICETHERMISTOR) //Kuo
+  #define HEATER_0_MAXTEMP 410
 #else
-#define HEATER_0_MAXTEMP 305
+  #define HEATER_0_MAXTEMP 305
 #endif
 #define HEATER_1_MAXTEMP 305
 #define HEATER_2_MAXTEMP 305
@@ -821,6 +832,8 @@
 #define TEMP_SENSOR_0 247
 #elif defined(E3D_PT100_EXTRUDER_NO_AMP)
 #define TEMP_SENSOR_0 148
+#elif defined(SLICETHERMISTOR) //Kuo Slice
+#define TEMP_SENSOR_0 800
 #else
 #define TEMP_SENSOR_0 5
 #endif
