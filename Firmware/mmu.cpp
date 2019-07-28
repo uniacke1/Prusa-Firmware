@@ -1459,6 +1459,8 @@ static bool can_load()
 {
     #ifdef SLICEMAGNUM //Kuo
       current_position[E_AXIS] += 67;
+    #elifdef SKELESTRUDER
+      current_position[E_AXIS] += 50;
     #else
       current_position[E_AXIS] += 60;
     #endif
@@ -1466,6 +1468,8 @@ static bool can_load()
             current_position[E_AXIS], MMU_LOAD_FEEDRATE, active_extruder);
     #ifdef SLICEMAGNUM //Kuo
       current_position[E_AXIS] -= 59;
+    #elifdef SKELESTRUDER
+      current_position[E_AXIS] -= 42;
     #else
       current_position[E_AXIS] -= 52;
     #endif
