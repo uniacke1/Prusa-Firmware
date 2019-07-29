@@ -8,8 +8,9 @@ You will need this 0.9 degree motor firmware (now includes BMG extruder support)
 
 Be able to compile this firmware before doing any hardware changes. Once motors have been changed, the first thing you need to do is update the firmware to this 0.9 motor support version.
 
-NEW on July 1 2019-
-Extruder microstep rate has been reduced to avoid overrunning EINSY. E-steps are now 1/2 of what was needed for prior BNB firmware
+NEW-
+Extruder microstep rate has been reduced to avoid overrunning EINSY. E-steps are now 1/2 of what was needed for prior BNB firmware. Added Linear Advance 1.5 support, Slice Engineering thermistor table, and Skelestruder filament move distances to this branch.
+
 Set e-steps to new values via terminal window.
 -
 PLEASE DO A FACTORY RESET WITH DATA ERASURE after installing this firmware. Failure to clear out old EEPROM setttings can produce odd printer behavior.
